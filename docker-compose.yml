@@ -1,0 +1,56 @@
+version: "3.9"
+
+services: 
+  nginx:
+    build: 
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    container_name: nginx
+    volumes: 
+      - ./:/var/www/docker-start
+    ports: 
+      - 8080:80
+    networks: 
+      - myapp
+  fpm:
+    build: 
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: fpm
+    volumes: 
+      - ./:/var/www/docker-start
+    networks: 
+      - myapp
+  db:
+    image: mysql:5.7
+    container_name: db
+    volumes: 
+      - ./database:/docker-entrypoint-initdb.d
+      - ./data/db/mysql:/var/lib/mysql
+    ports: 
+      - 3306:3306
+    networks: 
+      - myapp
+    environment: 
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: docker
+      # MYSQL_USER: db_user
+      # MYSQL_PASSWORD: db_user_pass
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    networks: 
+      - myapp
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+networks: 
+  myapp:
+    driver: bridge
+    
